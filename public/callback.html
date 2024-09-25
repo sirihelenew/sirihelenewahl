@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Callback</title>
+</head>
+<body>
+  <h1>Authenticating...</h1>
+  <script>
+    const clientId = 'e766892102b04c559335509e3fa258ef'; // Replace with your actual Spotify client ID
+    
+    // Extract the query parameter 'code' from the URL
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+
+    if (!code) {
+      redirectToAuthCodeFlow(clientId); // This will redirect to Spotify's authorization page
+    } else {
+      getAccessToken(clientId, code).then(accessToken => {
+        if (accessToken) {
+          localStorage.setItem('spotifyAccessToken', accessToken); // Store access token in localStorage
+          window.location.href = 'success.html'; // Redirect to your main page
+        } else {
+          console.error('No access token found');
+        }
+      }).catch(error => {
+        console.error('Error exchanging code for token:', error);
+      });
+    }
+    if (code) {
+      // If code is present, this means the authentication worked
+      //document.body.innerHTML = `<h1>Authentication Successful!</h1><p>Your authorization code is: ${code}</p>`;
+
+      // Store the code in localStorage (optional)
+      localStorage.setItem('spotifyAuthCode', code);
+
+      // Optionally, you can do something else here, like redirecting to another page
+      window.location.href = 'success.html';
+    } else {
+      // If no code is found, show an error message
+      document.body.innerHTML = `<h1>Authentication Failed</h1><p>No authorization code found in the URL.</p>`;
+    }
+
+    async function getAccessToken(clientId, code) {
+      const verifier = localStorage.getItem("verifier");
+
+      const params = new URLSearchParams();
+      params.append("client_id", clientId);
+      params.append("grant_type", "authorization_code");
+      params.append("code", code);
+      params.append("redirect_uri", "https://sirihelenewahl.web.app/callback.html"); // Ensure this matches your Spotify app's settings
+      params.append("code_verifier", verifier);
+
+      const result = await fetch("https://accounts.spotify.com/api/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: params
+      });
+
+      const response = await result.json();
+      if (result.ok) {
+        return response.access_token; // Return the access token
+      } else {
+        console.error('Error retrieving access token:', response);
+        return null;
+      }
+    }
+
+    // Function to fetch the user's Spotify profile using the access token
+    async function fetchProfile(token) {
+      const result = await fetch("https://api.spotify.com/v1/me", {
+        method: "GET", 
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      return await result.json();
+    }
+  </script>
+
+  
+</body>
+</html>

@@ -1,0 +1,25 @@
+@import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:ital,wght@0,400;0,700;1,200;1,500;1,700&display=swap');
+
+:root {
+  --blue: #86A7FC;
+  --gul: #FFF89C;
+  --frostee: #FF6868;
+  --blue2: #7BD3EA;
+  --lilla: #BC7AF9;
+  --white: #FFF;
+  --green: #A6FF96;
+  --rosa: #FFA1CF;
+  --hotpink: #FF407D;
+  --winered: #7D0A0A;
+  --grey: #333;
+}
+
+.header {    
+  background-color: var(--hotpink);  
+  color: var(--white);
+  padding: 20px;    
+  text-align: center;    
+  font-size: x-large;
+  margin: 0;
+  
+}
