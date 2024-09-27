@@ -3,10 +3,129 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vorside</title>
+    <title>Vorsside</title>
     <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=PT+Sans+Narrow:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+        font-family: 'Josefin Sans', sans-serif;
+        box-sizing: border-box;
+        margin: 0;
+        }
+        .container { display: flex;}
+        .boks {
+        /* flex: 1; */
+        padding: 20px;
+        box-sizing: border-box;
+        border: 1px solid var(--white);
+        justify-content: center;
+        align-items: center;
+        display: flex;
+        }
+
+    </style>
 </head>
 <body>
-    
+    <div class="header">
+        <img src="VORSSIDE-logo.svg" alt="logo" style="width: 100%; height: auto;">
+    </div>
+    <div class="topnav" style="background-color: var(--white);">
+        <a class="p1"></a>
+    </div>
+    <article>
+        <div class="container">
+            <div class="boks" style="width: 40%; background-color: var(--blue2);">
+                <img src="diskokule.svg" alt="logo" style="width: 100%; height: auto;">
+            </div>
+            <div class="boks" style="width: 60%; background-color: var(--rosa);">
+                <img src="hostvors.svg" alt="logo" style="width: 100%; height: auto;">
+            </div>
+          </div>
+          <!-- <div class="topnav" style="background-color: var(--white);">
+            <a class="p1"></a>
+        </div> -->
+          <div class="container">
+            <div class="boks" style="width: 60%; background-color: var(--green);">
+                <img src="joinvors.svg" alt="logo" style="width: 100%; height: auto;">
+            </div>
+            <div class="boks" style="width: 40%; background-color: var(--gul);">
+                <img src="drink.svg" alt="logo" style="width: 100%; height: auto;">
+            </div>
+          </div>
+          <div class="container">
+            <div class="boks" style="width: 40%; background-color: var(--orange);">
+                <img src="sadhamster.png" alt="logo" style="width: 100%; height: auto;">
+            </div>
+            <div class="boks" style="width: 60%; background-color: var(--lilla);">
+                <img src="drikkeleker.svg" alt="logo" style="width: 100%; height: auto;">
+            </div>
+          </div>
+    </article>
+
+    <!-- <div class="topnav">
+        <a class="p1" href="#">Logg inn</a>
+    </div> -->
+
+    <button id="login">Log in with Spotify</button>
+
+
+<script>
+  const clientId = 'e766892102b04c559335509e3fa258ef'; // Må denne være privat
+
+    document.getElementById('login').onclick = function() {
+        redirectToAuthCodeFlow(clientId);
+    };
+
+    async function redirectToAuthCodeFlow(clientId) {
+        const verifier = generateCodeVerifier(128);
+        const challenge = await generateCodeChallenge(verifier);
+
+        // Store the code verifier in localStorage to use it later when fetching the access token
+        localStorage.setItem("verifier", verifier);
+
+        const params = new URLSearchParams();
+        params.append("client_id", clientId);
+        params.append("response_type", "code");
+        params.append("redirect_uri", "https://sirihelenewahl.web.app/callback.html"); // Ensure this matches your Spotify app's settings
+        params.append("scope", "user-read-private user-read-email playlist-modify-public playlist-modify-private user-read-recently-played");
+        params.append("code_challenge_method", "S256");
+        params.append("code_challenge", challenge);
+
+        // Redirect the user to Spotify's authorization endpoint
+        window.location = `https://accounts.spotify.com/authorize?${params.toString()}`;
+    }
+
+    function generateCodeVerifier(length) {
+        let text = '';
+        let possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+        for (let i = 0; i < length; i++) {
+            text += possible.charAt(Math.floor(Math.random() * possible.length));
+        }
+        return text;
+    }
+
+    async function generateCodeChallenge(codeVerifier) {
+        const data = new TextEncoder().encode(codeVerifier);
+        const digest = await window.crypto.subtle.digest('SHA-256', data);
+        return btoa(String.fromCharCode.apply(null, [...new Uint8Array(digest)]))
+            .replace(/\+/g, '-')
+            .replace(/\//g, '_')
+            .replace(/=+$/, '');
+    }
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBxy0QD8ORm-kHd_U66v0uhbdy1TnKEwV4",
+        authDomain: "sirihelenewahl.firebaseapp.com",
+        projectId: "sirihelenewahl",
+        storageBucket: "sirihelenewahl.appspot.com",
+        messagingSenderId: "347857962806",
+        appId: "1:347857962806:web:86fb0ee7948b739ca81597"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+
+</script>
 </body>
 </html>

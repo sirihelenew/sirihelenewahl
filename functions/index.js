@@ -76,3 +76,9 @@ exports.callback = functions.https.onRequest((req, res) => {
     }
   });
 });
+
+
+// Trenger funksjon for: Starte et vors, joine et vors, legge til sanger, hosten får spillelisten
+
+
+//exports.createPlaylist =

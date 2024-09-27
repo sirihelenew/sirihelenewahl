@@ -12,6 +12,7 @@
   --hotpink: #FF407D;
   --winered: #7D0A0A;
   --grey: #333;
+  --orange: #FF9874;
 }
 
 .header {    
@@ -21,5 +22,32 @@
   text-align: center;    
   font-size: x-large;
   margin: 0;
+}
+
+.topnav {
+  overflow: hidden;
+  background-color: var(--gul);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
   
+.topnav a {
+  display: block;
+  color: var(--grey);
+  text-align: center;
+  padding: 14px 16px;
+  text-decoration: none;
+  font-size: large;
+}
+.topnav a:hover {color: var(--hotpink);}
+
+.button {
+  background-color: var(--hotpink);
+  color: var(--white);
+  padding: 14px 20px;
+  margin: 8px 0;
+  border: none;
+  cursor: pointer;
+  width: 50%;
 }
