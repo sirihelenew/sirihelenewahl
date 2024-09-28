@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <script src="https://kit.fontawesome.com/c110f170bd.js" crossorigin="anonymous"></script>
-    <script type="module" src="js/vorsSPA.js"></script>
+    <script type="module" src="js/vorsside2.js"></script>
     <style>
     body {
         font-family: 'Roboto Condensed', sans-serif;
@@ -31,7 +31,7 @@
     </style>
 </head>
 <body>
-    <a href="vorside.html" class="home-button" id="home-button" style="display: none;">
+    <a href="vorside2.html" class="home-button" id="home-button" style="display: none;">
         <i class="fa-solid fa-arrow-left-long"></i>Tilbake</a>
     <div class="header">
         <img id="vorsside-logo"
@@ -43,13 +43,18 @@
 
     <article>
         <div class="container">
-            <div class="boks" style="width: 40%; background-color: var(--blue2);">
-                <img src="images/diskokule.svg" alt="logo" style="width: 100%; height: auto;">
+            <div class="boks" 
+                style="width: 40%; background-color: var(--blue2);"
+                onclick="singlePageApplication('var(--blue2)', 'groupInfo')">
+                <img id="vorsGruppe" 
+                    src="images/mingruppe.svg" 
+                    alt="logo" 
+                    style="width: 100%; height: auto;">
             </div>
             <div class="boks" 
                 style="width: 60%; background-color: var(--rosa);"
                 onclick="hostVors()">
-                <img src="images/hostvors.svg" alt="logo" style="width: 100%; height: auto;">
+                <img src="images/onrepeat.svg" alt="logo" style="width: 100%; height: auto;">
             </div>
           </div>
 
@@ -57,7 +62,7 @@
             <div class="boks" 
                 style="width: 60%; background-color: var(--green);"
                 onclick="joinVors()">
-                <img src="images/joinvors.svg" alt="logo" style="width: 100%; height: auto;">
+                <img src="images/borst.svg" alt="logo" style="width: 100%; height: auto;">
             </div>
             <div class="boks" style="width: 40%; background-color: var(--gul);">
                 <img src="images/drink.svg" alt="logo" style="width: 100%; height: auto;">
@@ -69,7 +74,7 @@
                 <img src="images/kort.svg" alt="logo" style="width: 100%; height: auto;">
             </div>
             <div class="boks" style="width: 60%; background-color: var(--lilla);">
-                <img src="images/drikkeleker.svg" alt="logo" style="width: 100%; height: auto;">
+                <img src="images/omegasdrikkelek.svg" alt="logo" style="width: 100%; height: auto;">
             </div>
           </div>
     </article>
@@ -85,14 +90,25 @@
 <script type="module" src="js/firebaseConfig.js" defer></script>
 <script type="module" src="js/vorsFunctions.js" defer></script>
 <script type="module">
-    import { hostVors } from './js/vorsSPA.js';
-    window.hostVors = hostVors; // Make the function accessible globally
+    import { singlePageApplication } from './js/vorsside2.js';
+    window.singlePageApplication = singlePageApplication; // Make the function accessible globally
   </script>
   <script type="module">
     import { joinVors } from './js/vorsSPA.js';
     window.joinVors = joinVors; // Make the function accessible globally
   </script>
+  
+<script>
+    window.onload = function() {
+    const groupId = localStorage.getItem('currentGroupId');
+    const userName = localStorage.getItem('currentUserName');
 
+    // if (groupId && userName) {
+    //     listenToGroupUpdates(groupId); 
+    // }
+};
+
+</script>
 <!-- <script>
   const clientId = 'e766892102b04c559335509e3fa258ef'; // Må denne være privat
 
