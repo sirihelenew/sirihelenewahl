@@ -36,6 +36,7 @@ export function hostVors() {
     inputBox.type = 'text';
     inputBox.placeholder = 'Lag en ID';
     inputBox.className = 'input-box';
+    inputBox.id = 'groupIdInput';
 
     const submitButton = document.createElement('button');
     submitButton.innerText = 'START VORS';
@@ -46,13 +47,16 @@ export function hostVors() {
     submitButton.onclick = async function() {
         const groupId = inputBox.value;
         if (groupId) {
-            await createGroup(groupId);
-            // Here you can add the code to save the ID to Firebase
-            console.log('ID:', groupId);
-            alert(`Vorsgruppe '${groupId}' er opprettet! Del ID-en med deltakerne.`);
-            window.location.href = 'vorside2.html';
-            // document.body.removeChild(container);
-            // article.style.display = 'block';
+            const success = await createGroup(groupId);
+            if (success) {
+                console.log('ID:', groupId);
+                alert(`Vorsgruppe '${groupId}' er opprettet! Del ID-en med deltakerne.`);
+                window.location.href = 'vorside2.html';
+            } else {
+                // Clear the input field and focus on it
+                inputBox.value = '';
+                inputBox.focus();
+            }
         } else {
             alert('Du må skrive inn en ID');
         }

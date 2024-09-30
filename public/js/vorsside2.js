@@ -1,4 +1,4 @@
-import { doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+import { doc, getDoc, updateDoc, arrayUnion, collection } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 import { db } from './firebaseConfig.js';
 
 async function visGruppeInfo(groupId, container) {
@@ -81,12 +81,13 @@ export function singlePageApplication(color, type) {
     document.body.appendChild(container);
 
     if (type==='groupInfo') {
-        const groupId = localStorage.getItem('currentGroupId');
+        const groupId = localStorage.getItem('pendingGroupId');
+        console.log('Group ID fuck you:', groupId);
         visGruppeInfo(groupId, container);
     }
     if (type==='repeatInfo') {
         const userName = localStorage.getItem('currentUserName');
-        const groupId = localStorage.getItem('currentGroupId');
+        const groupId = localStorage.getItem('pendingGroupId');
         if (userName === 'Host') {
             onRepeatInfo(container, true, groupId);
         } else {
@@ -185,24 +186,39 @@ async function onRepeatInfo(container, isHost, groupId) {
                 }
             });
             console.log('Positions:', positions);
-
+        
+            const groupId = localStorage.getItem('pendingGroupId'); // Ensure groupId is retrieved from localStorage
+            if (!groupId) {
+                console.error('Group ID is missing.');
+                return;
+            }
+        
             const groupRef = doc(db, 'vorsGrupper', groupId);
             try {
                 await updateDoc(groupRef, {
                     onRepeatPositions: arrayUnion(...positions)
                 });
                 console.log('Positions added to Firestore.');
+        
+        
                 // Check if accessToken exists
-        let accessToken = localStorage.getItem('spotifyAccessToken');
-        if (!accessToken) {
-            // If no access token, redirect to Spotify authorization
-            localStorage.setItem("pendingGroupId", groupId); // Save the groupId for later use
-            redirectToAuthCodeFlow(clientId); // This will redirect to Spotify's authorization page
-            return; // Stop execution until the user returns with an access token
-        }
-
-        // If accessToken exists, create the Spotify playlist
-        await createSpotifyPlaylist(groupId);
+                let accessToken = localStorage.getItem('spotifyAccessToken');
+                if (!accessToken) {
+                    // If no access token, redirect to Spotify authorization
+                    localStorage.setItem("pendingGroupId", groupId); // Save the groupId for later use
+                    redirectToAuthCodeFlow(clientId, groupId); // This will redirect to Spotify's authorization page
+                    return; // Stop execution until the user returns with an access token
+                }
+        
+                // Check if playlist already exists to avoid creating multiple playlists
+                const groupDoc = await getDoc(groupRef);
+                if (groupDoc.exists() && groupDoc.data().playlistId) {
+                    console.log('Playlist already exists for this group.');
+                    return;
+                }
+        
+                // If accessToken exists and no playlist exists, create the Spotify playlist
+                
             } catch (error) {
                 console.error('Error adding positions to Firestore:', error);
             }
@@ -294,12 +310,11 @@ async function redirectToAuthCodeFlow(clientId, groupId) {
     const params = new URLSearchParams();
     params.append("client_id", clientId);
     params.append("response_type", "code");
-    params.append("redirect_uri", "https://sirihelenewahl.web.app/callback.html"); // Ensure this matches your Spotify app's settings
+    params.append("redirect_uri", "https://sirihelenewahl.web.app/callback.html"); 
     params.append("scope", "user-read-private user-read-email playlist-modify-public playlist-modify-private user-read-recently-played");
     params.append("code_challenge_method", "S256");
     params.append("code_challenge", challenge);
 
-    // Redirect the user to Spotify's authorization endpoint
     window.location = `https://accounts.spotify.com/authorize?${params.toString()}`;
 }
 
@@ -324,12 +339,12 @@ async function generateCodeChallenge(codeVerifier) {
 
 
 async function createSpotifyPlaylist(groupId) {
+    console.log('Creating playlist for groupId:', groupId); // Debugging log
     const accessToken = localStorage.getItem('spotifyAccessToken');
     if (!accessToken) {
         console.error('No access token found');
         return;
     }
-
     try {
         const response = await fetch('https://api.spotify.com/v1/me/playlists', {
             method: 'POST',
@@ -346,8 +361,18 @@ async function createSpotifyPlaylist(groupId) {
 
         if (response.ok) {
             const data = await response.json();
-            console.log('Playlist created:', data);
-            alert('Playlist created successfully!');
+            const playlistId = data.id;
+            const groupRef = doc(db, 'vorsGrupper', groupId);
+            try {
+                await updateDoc(groupRef, {
+                    playlistId: playlistId
+                });
+                console.log('Playlist created:', data);
+                console.log('Playlist ID saved to Firestore.');
+                alert('Playlist created and linked to your group!');
+                } catch (error) {
+                    console.error('Error updating Firestore with playlistId:', error);
+                }
         } else {
             console.error('Error creating playlist:', response.statusText);
             alert('There was an error creating the playlist. Please try again.');
@@ -356,27 +381,34 @@ async function createSpotifyPlaylist(groupId) {
         console.error('Error creating Spotify playlist:', error);
         alert('An error occurred while creating the playlist.');
     }
+    
 }
-// This code will run when the page loads
+
 window.onload = async function() {
     console.log('Page loaded');
     const accessToken = localStorage.getItem('spotifyAccessToken');
-    const groupId = localStorage.getItem("pendingGroupId"); 
+    const groupId = localStorage.getItem('pendingGroupId'); 
 
     console.log('Access Token:', accessToken);
     console.log('Group ID:', groupId);
 
     if (accessToken && groupId) {
-        console.log('Access token found, creating Spotify playlist...');
-        await createSpotifyPlaylist(groupId);
-
-        // Clear the saved groupId since we no longer need it
-        localStorage.removeItem("pendingGroupId");
+        const groupRef = doc(db, 'vorsGrupper', groupId);
+            const groupDoc = await getDoc(groupRef);
+            if (groupDoc.exists() && groupDoc.data().playlistId) {
+                console.log('Playlist already exists for this group.');
+            } else {
+                console.log('Access token found, creating Spotify playlist...');
+                await createSpotifyPlaylist(groupId);
+            }
     } else if (!accessToken && groupId) {
         console.log('Access token not found, redirecting to Spotify authorization...');
-        // Redirect again if accessToken is missing but groupId is present
-        redirectToAuthCodeFlow(clientId);
+        // redirectToAuthCodeFlow(clientId, groupId);
     } else {
         console.error('Missing groupId or accessToken. Unable to create playlist.');
     }
 };
+function removePendingGroupId() {
+    localStorage.removeItem("pendingGroupId");
+    console.log("Pending Group ID removed.");
+}

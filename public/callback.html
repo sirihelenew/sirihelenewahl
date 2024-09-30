@@ -13,7 +13,8 @@
     const code = params.get("code");
 
     if (!code) {
-      redirectToAuthCodeFlow(clientId); 
+      const groupId = localStorage.getItem("pendingGroupId");
+      redirectToAuthCodeFlow(clientId, groupId); 
     } else {
       getAccessToken(clientId, code).then(accessToken => {
         if (accessToken) {
@@ -60,24 +61,25 @@
       }
     }
 
-    function redirectToAuthCodeFlow(clientId) {
+    function redirectToAuthCodeFlow(clientId, groupId) {
       const verifier = generateCodeVerifier(128);
-      const challenge = generateCodeChallenge(verifier);
+      generateCodeChallenge(verifier).then(challenge => {
+        // Store the code verifier, current URL, and groupId in localStorage to use it later when fetching the access token
+        localStorage.setItem("verifier", verifier);
+        localStorage.setItem("original_url", window.location.href);
+        localStorage.setItem("pendingGroupId", groupId);
 
-      // Store the code verifier and current URL in localStorage to use it later when fetching the access token
-      localStorage.setItem("verifier", verifier);
-      localStorage.setItem("original_url", window.location.href);
+        const params = new URLSearchParams();
+        params.append("client_id", clientId);
+        params.append("response_type", "code");
+        params.append("redirect_uri", "https://sirihelenewahl.web.app/callback.html"); // Ensure this matches your Spotify app's settings
+        params.append("scope", "user-read-private user-read-email playlist-modify-public playlist-modify-private user-read-recently-played");
+        params.append("code_challenge_method", "S256");
+        params.append("code_challenge", challenge);
 
-      const params = new URLSearchParams();
-      params.append("client_id", clientId);
-      params.append("response_type", "code");
-      params.append("redirect_uri", "https://sirihelenewahl.web.app/callback.html"); // Ensure this matches your Spotify app's settings
-      params.append("scope", "user-read-private user-read-email playlist-modify-public playlist-modify-private user-read-recently-played");
-      params.append("code_challenge_method", "S256");
-      params.append("code_challenge", challenge);
-
-      // Redirect the user to Spotify's authorization endpoint
-      window.location = `https://accounts.spotify.com/authorize?${params.toString()}`;
+        // Redirect the user to Spotify's authorization endpoint
+        window.location = `https://accounts.spotify.com/authorize?${params.toString()}`;
+      });
     }
 
     function generateCodeVerifier(length) {

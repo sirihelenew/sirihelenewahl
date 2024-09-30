@@ -8,7 +8,7 @@ import { db } from './firebaseConfig.js';
         const existingGroupRef = await getDoc(groupRef);
         if (existingGroupRef.exists()) {
             alert('Denne ID-en er allerede i bruk. Velg en annen.');
-            return;
+            return false;
         }
 
         await setDoc(groupRef, {
@@ -20,8 +20,11 @@ import { db } from './firebaseConfig.js';
         });
         console.log(`Gruppen '${groupId}' er opprettet i Firestore.`);
 
-        localStorage.setItem('currentGroupId', groupId);
+        localStorage.setItem('pendingGroupId', groupId); /////// HORE
         localStorage.setItem('currentUserName', 'Host');
+        console.log('Stored Group ID:', localStorage.getItem('pendingGroupId'));
+
+        return true;
     }
 
     export async function joinGroup(groupId, userName) {
@@ -48,7 +51,8 @@ import { db } from './firebaseConfig.js';
         console.log(`Bruker '${userName}' ble lagt til vorsgruppen med ID: ${groupId}`);
         // window.location.href = 'vorside.html';
 
-        localStorage.setItem('currentGroupId', groupId);
+        localStorage.setItem('pendingGroupId', groupId);
         localStorage.setItem('currentUserName', userName);
+        console.log('Stored Group ID:', localStorage.getItem('pendingGroupId'));
     }
     
