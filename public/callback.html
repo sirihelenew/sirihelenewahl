@@ -7,38 +7,27 @@
 <body>
   <h1>Authenticating...</h1>
   <script>
-    const clientId = 'e766892102b04c559335509e3fa258ef'; // Replace with your actual Spotify client ID
-    
-    // Extract the query parameter 'code' from the URL
+    const clientId = 'e766892102b04c559335509e3fa258ef'; 
+    const originalUrl = localStorage.getItem("original_url");
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code");
 
     if (!code) {
-      redirectToAuthCodeFlow(clientId); // This will redirect to Spotify's authorization page
+      redirectToAuthCodeFlow(clientId); 
     } else {
       getAccessToken(clientId, code).then(accessToken => {
         if (accessToken) {
-          localStorage.setItem('spotifyAccessToken', accessToken); // Store access token in localStorage
-          window.location.href = 'success.html'; // Redirect to your main page
+          localStorage.setItem('spotifyAccessToken', accessToken); 
+          localStorage.removeItem("original_url"); // Clear the stored URL to avoid looping
+          window.location.href = originalUrl || 'vorside2.html';
         } else {
           console.error('No access token found');
+          document.body.innerHTML = `<h1>Authentication Failed</h1><p>No access token found.</p>`;
         }
       }).catch(error => {
         console.error('Error exchanging code for token:', error);
+        document.body.innerHTML = `<h1>Authentication Failed</h1><p>Error exchanging code for token: ${error.message}</p>`;
       });
-    }
-    if (code) {
-      // If code is present, this means the authentication worked
-      //document.body.innerHTML = `<h1>Authentication Successful!</h1><p>Your authorization code is: ${code}</p>`;
-
-      // Store the code in localStorage (optional)
-      localStorage.setItem('spotifyAuthCode', code);
-
-      // Optionally, you can do something else here, like redirecting to another page
-      window.location.href = 'success.html';
-    } else {
-      // If no code is found, show an error message
-      document.body.innerHTML = `<h1>Authentication Failed</h1><p>No authorization code found in the URL.</p>`;
     }
 
     async function getAccessToken(clientId, code) {
@@ -51,32 +40,65 @@
       params.append("redirect_uri", "https://sirihelenewahl.web.app/callback.html"); // Ensure this matches your Spotify app's settings
       params.append("code_verifier", verifier);
 
-      const result = await fetch("https://accounts.spotify.com/api/token", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: params
-      });
+      try {
+        const result = await fetch("https://accounts.spotify.com/api/token", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: params
+        });
 
-      const response = await result.json();
-      if (result.ok) {
-        return response.access_token; // Return the access token
-      } else {
-        console.error('Error retrieving access token:', response);
+        const response = await result.json();
+        if (result.ok) {
+            return response.access_token; // Return the access token
+        } else {
+            console.error('Error retrieving access token:', response);
+            return null;
+        }
+      } catch (error) {
+        console.error('Error fetching access token:', error);
         return null;
       }
     }
 
-    // Function to fetch the user's Spotify profile using the access token
-    async function fetchProfile(token) {
-      const result = await fetch("https://api.spotify.com/v1/me", {
-        method: "GET", 
-        headers: { Authorization: `Bearer ${token}` }
-      });
+    function redirectToAuthCodeFlow(clientId) {
+      const verifier = generateCodeVerifier(128);
+      const challenge = generateCodeChallenge(verifier);
 
-      return await result.json();
+      // Store the code verifier and current URL in localStorage to use it later when fetching the access token
+      localStorage.setItem("verifier", verifier);
+      localStorage.setItem("original_url", window.location.href);
+
+      const params = new URLSearchParams();
+      params.append("client_id", clientId);
+      params.append("response_type", "code");
+      params.append("redirect_uri", "https://sirihelenewahl.web.app/callback.html"); // Ensure this matches your Spotify app's settings
+      params.append("scope", "user-read-private user-read-email playlist-modify-public playlist-modify-private user-read-recently-played");
+      params.append("code_challenge_method", "S256");
+      params.append("code_challenge", challenge);
+
+      // Redirect the user to Spotify's authorization endpoint
+      window.location = `https://accounts.spotify.com/authorize?${params.toString()}`;
+    }
+
+    function generateCodeVerifier(length) {
+      let text = '';
+      let possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+      for (let i = 0; i < length; i++) {
+          text += possible.charAt(Math.floor(Math.random() * possible.length));
+      }
+      return text;
+    }
+
+    function generateCodeChallenge(codeVerifier) {
+      const data = new TextEncoder().encode(codeVerifier);
+      return crypto.subtle.digest('SHA-256', data).then(digest => {
+        return btoa(String.fromCharCode.apply(null, [...new Uint8Array(digest)]))
+          .replace(/\+/g, '-')
+          .replace(/\//g, '_')
+          .replace(/=+$/, '');
+      });
     }
   </script>
-
-  
 </body>
 </html>

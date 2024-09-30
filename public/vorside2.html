@@ -53,7 +53,7 @@
             </div>
             <div class="boks" 
                 style="width: 60%; background-color: var(--rosa);"
-                onclick="hostVors()">
+                onclick="singlePageApplication('var(--rosa)', 'repeatInfo')">
                 <img src="images/onrepeat.svg" alt="logo" style="width: 100%; height: auto;">
             </div>
           </div>
@@ -89,6 +89,7 @@
 
 <script type="module" src="js/firebaseConfig.js" defer></script>
 <script type="module" src="js/vorsFunctions.js" defer></script>
+<script src="js/vorsside2.js"></script>
 <script type="module">
     import { singlePageApplication } from './js/vorsside2.js';
     window.singlePageApplication = singlePageApplication; // Make the function accessible globally
