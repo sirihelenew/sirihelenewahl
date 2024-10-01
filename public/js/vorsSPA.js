@@ -53,7 +53,6 @@ export function hostVors() {
                 alert(`Vorsgruppe '${groupId}' er opprettet! Del ID-en med deltakerne.`);
                 window.location.href = 'vorside2.html';
             } else {
-                // Clear the input field and focus on it
                 inputBox.value = '';
                 inputBox.focus();
             }
@@ -105,6 +104,7 @@ export function joinVors() {
     idBox.type = 'text';
     idBox.placeholder = 'Skriv inn ID';
     idBox.className = 'input-box';
+    idBox.id = 'groupJoinIdInput';
 
     const nameBox = document.createElement('input');
     nameBox.type = 'text';
@@ -120,15 +120,14 @@ export function joinVors() {
         const groupId = idBox.value.trim();
         const userName = nameBox.value.trim();
         if (groupId && userName) {
-            try {
-                await joinGroup(groupId, userName);
+            const success = await joinGroup(groupId, userName);
+            if (success) {
                 alert(`Du har blitt med i vorsgruppen '${groupId}'!`);
                 window.location.href = 'vorside2.html';
-                // document.body.removeChild(container);
-                // article.style.display = 'block';
-            } catch (error) {
-                console.error('Error joining the group:', error);
-                alert('Det oppsto en feil hmmm');
+            } else {
+                // Clear the input field and focus on it
+                idBox.value = '';
+                idBox.focus();
             }
         } else {
             alert('Du må fylle ut både gruppeID og navnet ditt.');
