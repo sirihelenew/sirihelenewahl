@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="images/VORSSIDEikon2.svg">
     <title>Vorsside</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=PT+Sans+Narrow:wght@400;700&display=swap" rel="stylesheet">
@@ -31,7 +32,7 @@
     </style>
 </head>
 <body>
-    <a href="vorside2.html" class="home-button" id="home-button" style="display: none;">
+    <a href="vorsside2" class="home-button" id="home-button" style="display: none;">
         <i class="fa-solid fa-arrow-left-long"></i>Tilbake</a>
     <div class="header">
         <img id="vorsside-logo"
@@ -93,6 +94,10 @@
 <script type="module">
     import { singlePageApplication } from './js/vorsside2.js';
     window.singlePageApplication = singlePageApplication; // Make the function accessible globally
+  </script>
+  <script type="module">
+    import { hostVors } from './js/vorsSPA.js';
+    window.hostVors = hostVors; // Make the function accessible globally
   </script>
   <script type="module">
     import { joinVors } from './js/vorsSPA.js';

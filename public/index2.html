@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Welcome to Firebase Hosting</title>
+
+    <!-- update the version number as needed -->
+    <script defer src="/__/firebase/10.13.2/firebase-app-compat.js"></script>
+    <!-- include only the Firebase features as you need -->
+    <script defer src="/__/firebase/10.13.2/firebase-auth-compat.js"></script>
+    <script defer src="/__/firebase/10.13.2/firebase-database-compat.js"></script>
+    <script defer src="/__/firebase/10.13.2/firebase-firestore-compat.js"></script>
+    <script defer src="/__/firebase/10.13.2/firebase-functions-compat.js"></script>
+    <script defer src="/__/firebase/10.13.2/firebase-messaging-compat.js"></script>
+    <script defer src="/__/firebase/10.13.2/firebase-storage-compat.js"></script>
+    <script defer src="/__/firebase/10.13.2/firebase-analytics-compat.js"></script>
+    <script defer src="/__/firebase/10.13.2/firebase-remote-config-compat.js"></script>
+    <script defer src="/__/firebase/10.13.2/firebase-performance-compat.js"></script>
+    <!-- 
+      initialize the SDK after all desired features are loaded, set useEmulator to false
+      to avoid connecting the SDK to running emulators.
+    -->
+    <script defer src="/__/firebase/init.js?useEmulator=true"></script>
+  </head>
+  <body>
+    
+    <button id="login">Log in with Spotify</button>
+<script>
+  const clientId = 'e766892102b04c559335509e3fa258ef'; // Replace with your actual Spotify client ID
+
+document.getElementById('login').onclick = function() {
+    redirectToAuthCodeFlow(clientId);
+};
+
+async function redirectToAuthCodeFlow(clientId) {
+    const verifier = generateCodeVerifier(128);
+    const challenge = await generateCodeChallenge(verifier);
+
+    // Store the code verifier in localStorage to use it later when fetching the access token
+    localStorage.setItem("verifier", verifier);
+
+    const params = new URLSearchParams();
+    params.append("client_id", clientId);
+    params.append("response_type", "code");
+    params.append("redirect_uri", "https://sirihelenewahl.no/callback"); // Ensure this matches your Spotify app's settings
+    params.append("scope", "user-read-private user-read-email playlist-modify-public playlist-modify-private user-read-recently-played");
+    params.append("code_challenge_method", "S256");
+    params.append("code_challenge", challenge);
+
+    // Redirect the user to Spotify's authorization endpoint
+    window.location = `https://accounts.spotify.com/authorize?${params.toString()}`;
+}
+
+function generateCodeVerifier(length) {
+    let text = '';
+    let possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+    for (let i = 0; i < length; i++) {
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+    }
+    return text;
+}
+
+async function generateCodeChallenge(codeVerifier) {
+    const data = new TextEncoder().encode(codeVerifier);
+    const digest = await window.crypto.subtle.digest('SHA-256', data);
+    return btoa(String.fromCharCode.apply(null, [...new Uint8Array(digest)]))
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/, '');
+}
+
+</script>
+
+
+    
+  </body>
+</html>

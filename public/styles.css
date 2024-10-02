@@ -103,7 +103,7 @@ input[type="text"]::placeholder, input[type="number"]::placeholder {
   height: auto;
   background-color: var(--hotpink);
   text-align: center;
-  font-size: 20px;
+  font-size: 15px;
   font-family: 'Roboto Condensed', sans-serif;
   padding: 10px;
   color: white;

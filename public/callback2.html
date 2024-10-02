@@ -35,7 +35,7 @@
       localStorage.setItem('spotifyAuthCode', code);
 
       // Optionally, you can do something else here, like redirecting to another page
-      window.location.href = originalUrl || 'vorside2.html';
+      window.location.href = originalUrl || 'vorsside2';
     } else {
       // If no code is found, show an error message
       document.body.innerHTML = `<h1>Authentication Failed</h1><p>No authorization code found in the URL.</p>`;
@@ -48,7 +48,7 @@
       params.append("client_id", clientId);
       params.append("grant_type", "authorization_code");
       params.append("code", code);
-      params.append("redirect_uri", "https://sirihelenewahl.web.app/callback.html"); // Ensure this matches your Spotify app's settings
+      params.append("redirect_uri", "https://sirihelenewahl.no/callback"); // Ensure this matches your Spotify app's settings
       params.append("code_verifier", verifier);
 
       try {
@@ -81,7 +81,7 @@ async function redirectToAuthCodeFlow(clientId) {
             const params = new URLSearchParams();
             params.append("client_id", clientId);
             params.append("response_type", "code");
-            params.append("redirect_uri", "https://sirihelenewahl.web.app/callback.html");
+            params.append("redirect_uri", "https://sirihelenewahl.no/callback");
             params.append("scope", "user-read-private user-read-email playlist-modify-public playlist-modify-private user-read-recently-played");
             params.append("code_challenge_method", "S256");
             params.append("code_challenge", challenge);
