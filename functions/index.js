@@ -28,7 +28,7 @@ const cors = require('cors')({ origin: true });
 const spotifyApi = new SpotifyWebApi({
   clientId: 'e766892102b04c559335509e3fa258ef', // Replace with your clientId
   clientSecret: '7d0265c05e0c4ba590b05260f3d1cea8', // Replace with your clientSecret
-  redirectUri: 'https://sirihelenewahl.web.app/callback.html' // Ensure this matches your Spotify Developer Dashboard setting
+  redirectUri: 'https://sirihelenewahl.no/callback' // Ensure this matches your Spotify Developer Dashboard setting
 });
 
 // Login function - Redirect user to Spotify Authorization page
