@@ -51,7 +51,7 @@ export function hostVors() {
             if (success) {
                 console.log('ID:', groupId);
                 alert(`Vorsgruppe '${groupId}' er opprettet! Del ID-en med deltakerne.`);
-                window.location.href = 'vorside2.html';
+                window.location.href = 'vorsside2';
             } else {
                 inputBox.value = '';
                 inputBox.focus();
@@ -123,7 +123,7 @@ export function joinVors() {
             const success = await joinGroup(groupId, userName);
             if (success) {
                 alert(`Du har blitt med i vorsgruppen '${groupId}'!`);
-                window.location.href = 'vorside2.html';
+                window.location.href = 'vorsside2';
             } else {
                 // Clear the input field and focus on it
                 idBox.value = '';
