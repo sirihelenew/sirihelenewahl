@@ -3,10 +3,270 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <link rel="stylesheet" href="spotifystyles.css">
+    <title>Spotify Search UI</title>
+    <style>
+        body {
+            box-sizing: border-box;
+            margin: 0;
+            font-family: var(--encore-body-font-stack);
+            background-color: var(--spotifyPink);
+        }
+        .searchField {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+        }
+    
+        /* Basic Spotify-like styling */
+        .spotify-search-result {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            /* background-color: var(--spotifyPink); */
+            background-color: white;
+            cursor: pointer;
+        }
+
+        .spotify-search-result img {
+            width: 50px;
+            height: 50px;
+            margin-right: 20px;
+            border-radius: 5px;
+        }
+
+        .spotify-search-result h4 {
+            margin: 0;
+            color: black;
+            font-weight: 300;
+        }
+
+        .spotify-search-result p {
+            margin: 0;
+            font-size: 12px;
+            color: black;
+            font-weight: 200;
+            opacity: 0.6;
+        }
+
+
+
+        #resultsContainer, #searchResults, #onRepeatContainer {
+            /* background-color: var(--spotifyPink); */
+            background-color: white;
+        }
+        #searchInput {
+            padding: 10px;
+            border: 1px solid white;
+            border-radius: 5px;
+            width: 70%;
+            margin-right: 10px;
+            background-color: white;
+            color: black;
+            text-align: center;
+        }
+        #searchInput::placeholder {
+            color: black;
+        }
+        #input[type="text"] {
+            background-color: white;
+            color: black;
+        }
+    </style>
 </head>
 <body>
-    <h1>Slay</h1>
+    <img src="images/onrepeat.svg"></img>
 
+    <div class="searchField">
+        <input type="text" id="searchInput" placeholder="Søk etter sang" />
+    </div>
+
+    <!-- Container to display search results -->
+    <div id="spotify-logo-container" style="align-items: center; justify-content: center; display: flex; margin: 10px;">
+        <img src="images/2024-spotify-full-logo/Full_Logo_Black_CMYK.svg" alt="Spotify Logo" id="spotify-logo" style="width: 40%; display: none;">
+    </div>
+    <div id="resultsContainer"></div>
+    <div id="searchResults"></div>
+
+    <div id="onRepeatContainer"></div>
+
+    <script src="./js/spotify-web-api.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/spotify-web-api-js/1.5.2/spotify-web-api.min.js"></script>
+
+    <script>
+    const spotifyApi = new SpotifyWebApi();
+    spotifyApi.setAccessToken(localStorage.getItem('spotifyAccessToken'));
+        
+        async function searchSpotify(query) {
+            const accessToken = localStorage.getItem('spotifyAccessToken');
+
+            if (!accessToken) {
+                console.error('Access token missing.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`https://api.spotify.com/v1/search?type=track,playlist&q=${encodeURIComponent(query)}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    return data.tracks.items.slice(0, 10);
+                    // displaySearchResults(data);
+                } else {
+                    console.error('Error searching Spotify:', response.statusText);
+                    return [];
+                }
+            } catch (error) {
+                console.error('Error searching Spotify:', error);
+            }
+        }
+
+        function playTrack(trackUri) {
+            window.open(`https://open.spotify.com/track/${trackUri.split(':')[2]}`, '_blank');
+        }
+
+        // Function to view a specific playlist
+        function viewPlaylist(playlistId) {
+            window.open(`https://open.spotify.com/playlist/${playlistId}`, '_blank');
+        }
+
+        function renderSearchResults(results) {
+            const container = document.getElementById('resultsContainer');
+            container.innerHTML = ''; 
+
+            if (results.length === 0) {
+                container.textContent = 'No results found.';
+                return;
+            }
+
+            results.forEach(result => {
+                const trackElement = document.createElement('div');
+                trackElement.classList.add('spotify-search-result') 
+
+                const resultName = document.createElement('h2');
+                resultName.textContent = result.name;
+                trackElement.appendChild(resultName);
+
+                
+
+                const resultImage = document.createElement('img');
+                trackElement.innerHTML = `
+                        <img src="${result.album.images[0].url}" alt="${result.name}">
+                        <div>
+                            <h4>${result.name}</h4>
+                            <p>${result.artists.map(artist => artist.name).join(', ')}</p>
+                        </div>
+                       
+                    `;
+                    container.appendChild(trackElement);
+                    trackElement.addEventListener('click', async function() {
+                        console.log('clicked', result);
+
+                    const trackUri = result.uri;
+                    const playlistId = localStorage.getItem('playlistId');
+                    
+                    // Define your playlist ID (you can fetch or store this dynamically)
+                    //const playlistId = '7FzV1en0WLEnsJKkYBHUDC'; // Replace with your actual playlist ID
+
+                    // Use the function to add the clicked track to the playlist
+                    await spotifyApi.addTracksToPlaylist(playlistId, [trackUri]);
+                        
+                });
+            });
+        }
+
+    async function handleSearchInput(event) {
+        const query = event.target.value.trim();
+        if (query) {
+            const results = await searchSpotify(query);
+            renderSearchResults(results);
+            document.getElementById('spotify-logo').style.display = 'block';
+        } else {
+            document.getElementById('searchResults').innerHTML = ''; 
+        }
+    }
+
+        // Add event listener for live search
+        document.getElementById('searchInput').addEventListener('input', handleSearchInput);
+
+        async function fetchOnRepeatTracks() {
+            const accessToken = localStorage.getItem('spotifyAccessToken');
+            if (!accessToken) {
+                console.error('Access token missing. Cannot fetch "On Repeat" playlist.');
+                return;
+            }
+
+            try {
+                const response = await fetch('https://api.spotify.com/v1/playlists/37i9dQZF1EpjVWXn5cmrp1/tracks', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    renderOnRepeatTracks(data.items);
+                } else {
+                    console.error('Error fetching "On Repeat" playlist:', response.statusText);
+                }
+            } catch (error) {
+                console.error('Error fetching "On Repeat" playlist:', error);
+            }
+        }
+
+        function renderOnRepeatTracks(tracks) {
+            const container = document.getElementById('onRepeatContainer');
+            container.innerHTML = ''; // Clear any existing content
+
+            if (tracks.length === 0) {
+                container.textContent = 'No tracks found.';
+                return;
+            }
+
+            tracks.forEach(item => {
+                const track = item.track;
+                const trackElement = document.createElement('div');
+                trackElement.classList.add('spotify-search-result');
+                trackElement.innerHTML = `
+                    <img src="${track.album.images[0].url}" alt="${track.name}">
+                    <div>
+                        <h4>${track.name}</h4>
+                        <p>${track.artists.map(artist => artist.name).join(', ')}</p>
+                    </div>
+                `;
+                container.appendChild(trackElement);
+                trackElement.addEventListener('click', async function() {
+                        console.log('clicked', item);
+
+                    const trackUri = item.track.uri;
+                    const playlistId = localStorage.getItem('playlistId');
+                    
+                    // Define your playlist ID (you can fetch or store this dynamically)
+                    //const playlistId = '7FzV1en0WLEnsJKkYBHUDC'; // Replace with your actual playlist ID
+
+                    // Use the function to add the clicked track to the playlist
+                    await spotifyApi.addTracksToPlaylist(playlistId, [trackUri]);
+            });
+        });
+        }
+        
+
+        // Call the function to display playlists and "On Repeat" tracks when the page loads
+        window.onload = () => {
+            fetchOnRepeatTracks();
+        };
+
+    </script>
 </body>
 </html>
+
+

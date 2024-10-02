@@ -73,8 +73,8 @@
         const params = new URLSearchParams();
         params.append("client_id", clientId);
         params.append("response_type", "code");
-        params.append("redirect_uri", "https://sirihelenewahl.no/callback"); // Ensure this matches your Spotify app's settings
-        params.append("scope", "user-read-private user-read-email playlist-modify-public playlist-modify-private user-read-recently-played");
+        params.append("redirect_uri", "http://127.0.0.1:5002/callback"); // Ensure this matches your Spotify app's settings
+        params.append("scope", "user-read-private user-read-email playlist-modify-public playlist-modify-private user-read-recently-played playlist-read-private playlist-modify-private playlist-read-collaborative playlist-modify-public");
         params.append("code_challenge_method", "S256");
         params.append("code_challenge", challenge);
 

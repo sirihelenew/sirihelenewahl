@@ -37,6 +37,7 @@ export function hostVors() {
     inputBox.placeholder = 'Lag en ID';
     inputBox.className = 'input-box';
     inputBox.id = 'groupIdInput';
+    inputBox.autocomplete = "off";
 
     const submitButton = document.createElement('button');
     submitButton.innerText = 'START VORS';
@@ -105,6 +106,7 @@ export function joinVors() {
     idBox.placeholder = 'Skriv inn ID';
     idBox.className = 'input-box';
     idBox.id = 'groupJoinIdInput';
+    idBox.autocomplete = "off";
 
     const nameBox = document.createElement('input');
     nameBox.type = 'text';

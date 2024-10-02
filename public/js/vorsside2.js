@@ -42,8 +42,6 @@ async function visGruppeInfo(groupId, container) {
         console.error('Error fetching group info:', error);
     }
 }
-    
-    
 
 export function singlePageApplication(color, type) {
     const article = document.querySelector('article');
@@ -89,14 +87,23 @@ export function singlePageApplication(color, type) {
         const userName = localStorage.getItem('currentUserName');
         const groupId = localStorage.getItem('pendingGroupId');
         if (userName === 'Host') {
-            onRepeatInfo(container, true, groupId);
+            onRepeatInfo(container, true, groupId, false);
         } else {
-            onRepeatInfo(container, false, groupId);
+            onRepeatInfo(container, false, groupId, false);
+        }
+    }
+    if (type==='repeatInfoReload') {
+        const userName = localStorage.getItem('currentUserName');
+        const groupId = localStorage.getItem('pendingGroupId');
+        if (userName === 'Host') {
+            onRepeatInfoReload(container, true, groupId);
+        } else {
+            onRepeatInfo(container, false, groupId, false);
         }
     }
 }
 
-async function onRepeatInfo(container, isHost, groupId) {
+async function onRepeatInfo(container, isHost, groupId, reloadBool) {
     const ruleBox = document.createElement('div');
     setupField(ruleBox, 'var(--white)');
     ruleBox.style.alignItems = 'center';
@@ -162,6 +169,11 @@ async function onRepeatInfo(container, isHost, groupId) {
         container.appendChild(inputPosition);
         container.appendChild(addField);
         container.appendChild(submitPosButton);
+        if(reloadBool){
+            container.removeChild(inputPosition);
+            container.removeChild(addField);
+            container.removeChild(submitPosButton);
+        }
 
         function addInputField() {
             const inputField = document.createElement('input');
@@ -178,7 +190,6 @@ async function onRepeatInfo(container, isHost, groupId) {
         addField.addEventListener('click', addInputField);
 
         submitPosButton.addEventListener('click', async () => {
-            // localStorage.setItem('posClicked', true);
             const positionFields = document.querySelectorAll('input[type="number"]');
             const positions = [];
             positionFields.forEach(field => {
@@ -204,6 +215,7 @@ async function onRepeatInfo(container, isHost, groupId) {
                 let accessToken = localStorage.getItem('spotifyAccessToken');
                 if (!accessToken) {
                     localStorage.setItem("pendingGroupId", groupId); 
+                    localStorage.setItem("positions", JSON.stringify(positions));
                     redirectToAuthCodeFlow(clientId, groupId); 
                     return; 
                 }
@@ -273,6 +285,30 @@ async function onRepeatInfo(container, isHost, groupId) {
     }
 }
 
+async function onRepeatInfoReload(container, isHost, groupId) {
+    onRepeatInfo(container, isHost, groupId, true);
+    const addSongField = document.createElement('div');
+        setupField(addSongField, 'var(--green)');
+        addSongField.style.cursor = 'pointer';
+
+        const img = document.createElement('img');
+        img.id = 'addSongs';
+        img.src = 'images/addSongs.svg';
+        img.alt = 'logo';
+        img.style.width = '80%';
+        img.style.height = 'auto';
+        addSongField.appendChild(img);
+
+        addSongField.addEventListener('click', () => {
+            window.location.href = 'success';
+            console.log('addSongField clicked');
+        });
+        container.appendChild(addSongField);
+
+
+
+}
+
 function setupField(field, color) {
     field.style.display = 'flex';
     field.style.flexDirection = 'column';
@@ -299,7 +335,7 @@ async function redirectToAuthCodeFlow(clientId, groupId) {
     const params = new URLSearchParams();
     params.append("client_id", clientId);
     params.append("response_type", "code");
-    params.append("redirect_uri", "https://sirihelenewahl.no/callback"); 
+    params.append("redirect_uri", "http://127.0.0.1:5002/callback"); 
     params.append("scope", "user-read-private user-read-email playlist-modify-public playlist-modify-private user-read-recently-played");
     params.append("code_challenge_method", "S256");
     params.append("code_challenge", challenge);
@@ -343,7 +379,7 @@ async function createSpotifyPlaylist(groupId) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                name: `Gruppe ${groupId} På Repeat`,
+                name: `På Repeat gruppe: ${groupId}`,
                 description: 'Spilleliste for På Repeat-leken <3',
                 public: false
             })
@@ -352,6 +388,7 @@ async function createSpotifyPlaylist(groupId) {
         if (response.ok) {
             const data = await response.json();
             const playlistId = data.id;
+            localStorage.setItem('playlistId', playlistId);
             const groupRef = doc(db, 'vorsGrupper', groupId);
             try {
                 await updateDoc(groupRef, {
@@ -359,43 +396,122 @@ async function createSpotifyPlaylist(groupId) {
                 });
                 console.log('Playlist created:', data);
                 console.log('Playlist ID saved to Firestore.');
-                alert('Playlist created and linked to your group!');
+                alert('Spilleliste er laget og linket til gruppen din!');
+                singlePageApplication('var(--rosa)', 'repeatInfoReload');
                 } catch (error) {
                     console.error('Error updating Firestore with playlistId:', error);
                 }
         } else {
             console.error('Error creating playlist:', response.statusText);
-            alert('There was an error creating the playlist. Please try again.');
+            alert('Det skjedde en feil under oppretting av spillelisten.');
         }
     } catch (error) {
         console.error('Error creating Spotify playlist:', error);
-        alert('An error occurred while creating the playlist.');
+        alert('Det skjedde en feil under oppretting av spillelisten.');
     }
 }
+
+async function getOnRepeatPlaylistTracks() {
+    const accessToken = localStorage.getItem('spotifyAccessToken');
+    if (!accessToken) {
+        console.error('Access token missing. Cannot fetch playlists.');
+        return;
+    }
+
+    // "On Repeat" playlist ID (this is consistent for all users)
+    const onRepeatPlaylistId = '37i9dQZF1EppDS2s8FzxMK'; 
+
+    try {
+        const response = await fetch(`https://api.spotify.com/v1/playlists/${onRepeatPlaylistId}/tracks`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data.items;  // Return an array of tracks
+        } else {
+            console.error('Error fetching On Repeat playlist tracks:', response.statusText);
+            return [];
+        }
+    } catch (error) {
+        console.error('Error fetching On Repeat playlist tracks:', error);
+        return [];
+    }
+}
+
+async function displayOnRepeatPlaylist() {
+    const tracks = await getOnRepeatPlaylistTracks();
+    if (tracks.length === 0) {
+        alert('No songs found in your "On Repeat" playlist.');
+        return;
+    }
+
+    const trackList = document.createElement('ul');
+    tracks.forEach(trackItem => {
+        const track = trackItem.track; // Access the track object
+        const trackListItem = document.createElement('li');
+        trackListItem.innerText = `${track.name} by ${track.artists.map(artist => artist.name).join(', ')}`;
+        trackListItem.style.cursor = 'pointer';
+
+        // When a user clicks on the track, add it to the shared playlist
+        trackListItem.addEventListener('click', () => {
+            const trackUri = track.uri;  // Get the track URI
+            addSongToPlaylist(playlistId, trackUri);  // Add to the shared playlist
+        });
+
+        trackList.appendChild(trackListItem);
+    });
+
+    // Display the track list in the UI (replace this with your actual UI logic)
+    const container = document.getElementById('track-container');  // Assuming you have a container to display tracks
+    container.innerHTML = '';  // Clear previous results
+    container.appendChild(trackList);  // Add the track list
+}
+
 
 
 window.onload = async function() {
     console.log('Page loaded');
     const accessToken = localStorage.getItem('spotifyAccessToken');
     const groupId = localStorage.getItem('pendingGroupId'); 
+    const positions = JSON.parse(localStorage.getItem('positions'));
 
     console.log('Access Token:', accessToken);
     console.log('Group ID:', groupId);
 
-    if (accessToken && groupId) {
+    // if (accessToken && groupId) {
+    //     const groupRef = doc(db, 'vorsGrupper', groupId);
+    //     const groupDoc = await getDoc(groupRef);
+    //         if (groupDoc.exists() && !groupDoc.data().playlistId) {
+    //             console.log('Playlist already exists for this group.');
+    //             await createSpotifyPlaylist(groupId);
+    //         } else {
+    //             console.log('Access token found, creating Spotify playlist...');
+    //             await createSpotifyPlaylist(groupId); 
+    //         }
+    // } else if (!accessToken && groupId) {
+    //     console.log('Access token not found, redirecting to Spotify authorization...');
+    // } else {
+    //     console.error('Missing groupId or accessToken. Unable to create playlist.');
+    // }
+    if (accessToken && groupId && positions) {
+        console.log('Resuming playlist creation after redirect...');
+
         const groupRef = doc(db, 'vorsGrupper', groupId);
-            const groupDoc = await getDoc(groupRef);
-            if (groupDoc.exists() && groupDoc.data().playlistId) {
-                console.log('Playlist already exists for this group.');
-            } else {
-                console.log('Access token found, creating Spotify playlist...');
-                await createSpotifyPlaylist(groupId); 
-            }
-    } else if (!accessToken && groupId) {
-        console.log('Access token not found, redirecting to Spotify authorization...');
-        // redirectToAuthCodeFlow(clientId, groupId);
+        const groupDoc = await getDoc(groupRef);
+
+        // Ensure playlist hasn't already been created
+        if (groupDoc.exists() && !groupDoc.data().playlistId) {
+            await createSpotifyPlaylist(groupId); 
+            localStorage.removeItem('positions');
+            //localStorage.removeItem('pendingGroupId');
+            singlePageApplication('var(--rosa)', 'repeatInfoReload',);
+        }
     } else {
-        console.error('Missing groupId or accessToken. Unable to create playlist.');
+        console.error('Missing accessToken or groupId. Unable to create playlist.');
     }
 };
 function removePendingGroupId() {
