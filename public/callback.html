@@ -21,7 +21,7 @@
         if (accessToken) {
           localStorage.setItem('spotifyAccessToken', accessToken); 
           localStorage.removeItem("original_url"); // Clear the stored URL to avoid looping
-          window.location.href = originalUrl || 'vorsside2';
+          window.location.href = originalUrl || 'vorsside';
         } else {
           console.error('No access token found');
           document.body.innerHTML = `<h1>Authentication Failed</h1><p>No access token found.</p>`;
@@ -39,7 +39,7 @@
       params.append("client_id", clientId);
       params.append("grant_type", "authorization_code");
       params.append("code", code);
-      params.append("redirect_uri", "https://sirihelenewahl.no/callback"); // Ensure this matches your Spotify app's settings
+      params.append("redirect_uri", "http://127.0.0.1:5002/callback"); // Ensure this matches your Spotify app's settings
       params.append("code_verifier", verifier);
 
       try {

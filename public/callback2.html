@@ -20,7 +20,7 @@
           localStorage.setItem('spotifyAccessToken', accessToken); 
           localStorage.removeItem("original_url"); // Clear the stored URL to avoid looping
         //   window.location.href = originalUrl;
-        window.location.href = `vorsside2.html?groupId=${groupId}&positions=${JSON.stringify(positions)}`;
+        window.location.href = `vorsside.html?groupId=${groupId}&positions=${JSON.stringify(positions)}`;
         } else {
           console.error('No access token found');
         }
@@ -36,7 +36,7 @@
       localStorage.setItem('spotifyAuthCode', code);
 
       // Optionally, you can do something else here, like redirecting to another page
-      window.location.href = originalUrl || 'vorsside2';
+      window.location.href = originalUrl || 'vorsside';
     } else {
       // If no code is found, show an error message
       document.body.innerHTML = `<h1>Authentication Failed</h1><p>No authorization code found in the URL.</p>`;

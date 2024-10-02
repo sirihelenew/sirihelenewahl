@@ -277,7 +277,9 @@ async function onRepeatInfo(container, isHost, groupId, reloadBool) {
         addSongField.appendChild(img);
 
         addSongField.addEventListener('click', () => {
-            redirectToAuthCodeFlow(clientId);
+            // redirectToAuthCodeFlow(clientId);
+            // console.log('addSongField clicked');
+            window.location.href = 'success';
             console.log('addSongField clicked');
         });
 
@@ -379,8 +381,8 @@ async function createSpotifyPlaylist(groupId) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                name: `På Repeat gruppe: ${groupId}`,
-                description: 'Spilleliste for På Repeat-leken <3',
+                name: `På Repeat - Gruppe ${groupId} 🩷`,
+                description: 'Spilleliste for På Repeat-leken 🔁🍻',
                 public: false
             })
         });

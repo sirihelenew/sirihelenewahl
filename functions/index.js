@@ -9,15 +9,6 @@
 
 const {onRequest} = require("firebase-functions/v2/https");
 const logger = require("firebase-functions/logger");
-
-// Create and deploy your first functions
-// https://firebase.google.com/docs/functions/get-started
-
-// exports.helloWorld = onRequest((request, response) => {
-//   logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
-
 // Spotify
 // Firebase functions setup
 const functions = require('firebase-functions');
@@ -28,7 +19,7 @@ const cors = require('cors')({ origin: true });
 const spotifyApi = new SpotifyWebApi({
   clientId: 'e766892102b04c559335509e3fa258ef', // Replace with your clientId
   clientSecret: '7d0265c05e0c4ba590b05260f3d1cea8', // Replace with your clientSecret
-  redirectUri: 'https://sirihelenewahl.no/callback' // Ensure this matches your Spotify Developer Dashboard setting
+  redirectUri: 'http://127.0.0.1:5002/callback' // Ensure this matches your Spotify Developer Dashboard setting
 });
 
 // Login function - Redirect user to Spotify Authorization page
