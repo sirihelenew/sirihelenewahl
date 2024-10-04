@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <script src="https://kit.fontawesome.com/c110f170bd.js" crossorigin="anonymous"></script>
-    <script type="module" src="js/vorsside2.js"></script>
+    <script type="module" src="js/vorsside.js"></script>
     <style>
     body {
         font-family: 'Roboto Condensed', sans-serif;
@@ -20,7 +20,6 @@
     }
     .container { display: flex;}
     .boks {
-        /* flex: 1; */
         padding: 20px;
         box-sizing: border-box;
         border: 1px solid var(--white);
@@ -32,7 +31,7 @@
     </style>
 </head>
 <body>
-    <a href="vorsside2" class="home-button" id="home-button" style="display: none;">
+    <a href="vorsside" class="home-button" id="home-button" style="display: none;">
         <i class="fa-solid fa-arrow-left-long"></i>Tilbake</a>
     <div class="header">
         <img id="vorsside-logo"
@@ -61,8 +60,7 @@
 
           <div class="container">
             <div class="boks" 
-                style="width: 60%; background-color: var(--green);"
-                onclick="joinVors()">
+                style="width: 60%; background-color: var(--green);">
                 <img src="images/borst.svg" alt="logo" style="width: 100%; height: auto;">
             </div>
             <div class="boks" style="width: 40%; background-color: var(--gul);">
@@ -83,8 +81,6 @@
         <div class="footertekst">Made with 🩷 av Siri Helene Wahl </div> 
     </div>
 
-    <!-- <button id="login">Log in with Spotify</button> -->
-
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js" defer></script>
 
@@ -101,21 +97,14 @@
   </script>
   <script type="module">
     import { joinVors } from './js/vorsSPA.js';
-    window.joinVors = joinVors; // Make the function accessible globally
+    window.joinVors = joinVors; 
   </script>
   
 <script>
     window.onload = function() {
-    const groupId = localStorage.getItem('pendingGroupId');
-    console.log('go die bitch',groupId);
-    const userName = localStorage.getItem('currentUserName');
-
-    // if (groupId && userName) {
-    //     listenToGroupUpdates(groupId); 
-    // }
-};
-
-</script>
+        const groupId = localStorage.getItem('pendingGroupId');
+        const userName = localStorage.getItem('currentUserName');
+    };
 
 </script>
 </body>

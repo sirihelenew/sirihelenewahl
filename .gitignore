@@ -73,3 +73,6 @@ node_modules
 .firebaserc
 firebase-debug.log
 
+/public/js/firebaseConfig.js
+
+functions

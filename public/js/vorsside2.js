@@ -247,6 +247,8 @@ async function onRepeatInfo(container, isHost, groupId, reloadBool) {
             if (groupSnap.exists()) {
                 const groupData = groupSnap.data();
                 const positions = groupData.onRepeatPositions || [];
+                const playlistId = groupData.playlistId;
+                localStorage.setItem('playlistId', playlistId);
 
                 positions.forEach((position, index) => {
                     const positionText = document.createElement('li');
@@ -256,7 +258,7 @@ async function onRepeatInfo(container, isHost, groupId, reloadBool) {
                     positionList.appendChild(positionText);
                 });
 
-                container.appendChild(positionField);
+                //container.appendChild(positionField);
             } else {
                 console.log('No such document!');
             }
@@ -279,7 +281,7 @@ async function onRepeatInfo(container, isHost, groupId, reloadBool) {
         addSongField.addEventListener('click', () => {
             // redirectToAuthCodeFlow(clientId);
             // console.log('addSongField clicked');
-            window.location.href = 'success';
+            window.location.href = 'onrepeat';
             console.log('addSongField clicked');
         });
 
@@ -302,13 +304,54 @@ async function onRepeatInfoReload(container, isHost, groupId) {
         addSongField.appendChild(img);
 
         addSongField.addEventListener('click', () => {
-            window.location.href = 'success';
+            window.location.href = 'onrepeat';
             console.log('addSongField clicked');
         });
         container.appendChild(addSongField);
+}
 
+export async function displayOnRepeatPositions(container, groupId) {
+    const positionField = document.createElement('div');
+    setupField(positionField, 'var(--lilla)');
+    positionField.style.color = 'var(--white)';
 
+    const positionHeader = document.createElement('h3');
+    positionHeader.innerText = 'Disse sangene skal legges til:';
+    positionHeader.style.margin = '0';
+    positionField.appendChild(positionHeader);
 
+    const positionList = document.createElement('p');
+    positionList.id = 'selectedSongs';
+    positionList.style.padding = '5px';
+    positionList.style.margin = '0';
+    positionField.appendChild(positionList);
+
+    container.appendChild(positionField);
+
+    const groupRef = doc(db, 'vorsGrupper', groupId);
+    try {
+        const groupSnap = await getDoc(groupRef);
+        if (groupSnap.exists()) {
+            const groupData = groupSnap.data();
+            const positions = groupData.onRepeatPositions || [];
+            updateSelectedSongs(positionList, positions);
+        } else {
+            console.log('No such document!');
+        }
+    } catch (error) {
+        console.error('Error fetching document:', error);
+    }
+}
+
+export function updateSelectedSongs(element, positions) {
+    if (positions.length === 0) {
+        element.textContent = 'Hosten har ikke valgt noen sanger';
+    } else if (positions.length === 1) {
+        element.textContent = `Hosten har valgt sang nummer ${positions[0]}`;
+    } else {
+        const lastPosition = positions.pop();
+        element.textContent = `Hosten har valgt sanger nummer ${positions.join(', ')} og ${lastPosition}`;
+    }
 }
 
 function setupField(field, color) {
@@ -337,7 +380,7 @@ async function redirectToAuthCodeFlow(clientId, groupId) {
     const params = new URLSearchParams();
     params.append("client_id", clientId);
     params.append("response_type", "code");
-    params.append("redirect_uri", "http://127.0.0.1:5002/callback"); 
+    params.append("redirect_uri", "https://sirihelenewahl.no/callback"); 
     params.append("scope", "user-read-private user-read-email playlist-modify-public playlist-modify-private user-read-recently-played");
     params.append("code_challenge_method", "S256");
     params.append("code_challenge", challenge);
@@ -400,6 +443,12 @@ async function createSpotifyPlaylist(groupId) {
                 console.log('Playlist ID saved to Firestore.');
                 alert('Spilleliste er laget og linket til gruppen din!');
                 singlePageApplication('var(--rosa)', 'repeatInfoReload');
+            
+                const spotifyUri = `spotify:playlist:${playlistId}`;
+                window.location.href = spotifyUri;
+
+                await ensurePlaylistOnIphone(playlistId);
+            
                 } catch (error) {
                     console.error('Error updating Firestore with playlistId:', error);
                 }
@@ -413,65 +462,48 @@ async function createSpotifyPlaylist(groupId) {
     }
 }
 
-async function getOnRepeatPlaylistTracks() {
-    const accessToken = localStorage.getItem('spotifyAccessToken');
-    if (!accessToken) {
-        console.error('Access token missing. Cannot fetch playlists.');
-        return;
-    }
-
-    // "On Repeat" playlist ID (this is consistent for all users)
-    const onRepeatPlaylistId = '37i9dQZF1EppDS2s8FzxMK'; 
-
+async function ensurePlaylistOnIphone(playlistId) {
     try {
-        const response = await fetch(`https://api.spotify.com/v1/playlists/${onRepeatPlaylistId}/tracks`, {
-            method: 'GET',
+        // Get the active device ID
+        const devicesResponse = await fetch('https://api.spotify.com/v1/me/player/devices', {
             headers: {
                 'Authorization': `Bearer ${accessToken}`
             }
         });
 
-        if (response.ok) {
-            const data = await response.json();
-            return data.items;  // Return an array of tracks
-        } else {
-            console.error('Error fetching On Repeat playlist tracks:', response.statusText);
-            return [];
+        if (!devicesResponse.ok) {
+            throw new Error('Failed to get devices');
         }
-    } catch (error) {
-        console.error('Error fetching On Repeat playlist tracks:', error);
-        return [];
-    }
-}
 
-async function displayOnRepeatPlaylist() {
-    const tracks = await getOnRepeatPlaylistTracks();
-    if (tracks.length === 0) {
-        alert('No songs found in your "On Repeat" playlist.');
-        return;
-    }
+        const devicesData = await devicesResponse.json();
+        const iphoneDevice = devicesData.devices.find(device => device.type === 'Smartphone');
 
-    const trackList = document.createElement('ul');
-    tracks.forEach(trackItem => {
-        const track = trackItem.track; // Access the track object
-        const trackListItem = document.createElement('li');
-        trackListItem.innerText = `${track.name} by ${track.artists.map(artist => artist.name).join(', ')}`;
-        trackListItem.style.cursor = 'pointer';
+        if (!iphoneDevice) {
+            throw new Error('iPhone device not found');
+        }
 
-        // When a user clicks on the track, add it to the shared playlist
-        trackListItem.addEventListener('click', () => {
-            const trackUri = track.uri;  // Get the track URI
-            addSongToPlaylist(playlistId, trackUri);  // Add to the shared playlist
+        // Start playback on the iPhone
+        const playbackResponse = await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${iphoneDevice.id}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                context_uri: `spotify:playlist:${playlistId}`
+            })
         });
 
-        trackList.appendChild(trackListItem);
-    });
+        if (!playbackResponse.ok) {
+            throw new Error('Failed to start playback on iPhone');
+        }
 
-    // Display the track list in the UI (replace this with your actual UI logic)
-    const container = document.getElementById('track-container');  // Assuming you have a container to display tracks
-    container.innerHTML = '';  // Clear previous results
-    container.appendChild(trackList);  // Add the track list
+        console.log('Playback started on iPhone');
+    } catch (error) {
+        console.error('Error ensuring playlist on iPhone:', error);
+    }
 }
+
 
 
 

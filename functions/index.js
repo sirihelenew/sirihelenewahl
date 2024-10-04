@@ -15,11 +15,51 @@ const functions = require('firebase-functions');
 const SpotifyWebApi = require('spotify-web-api-node');
 const cors = require('cors')({ origin: true });
 
+require('dotenv').config(); // Load environment variables
+
+
+const clientId = process.env.CLIENT_ID;
+const clientSecret = process.env.CLIENT_SECRET;
+
 // Initialize Spotify API
+// const spotifyApi = new SpotifyWebApi({
+//   clientId: 'e766892102b04c559335509e3fa258ef', // Replace with your clientId
+//   clientSecret: '7d0265c05e0c4ba590b05260f3d1cea8', // Replace with your clientSecret
+//   redirectUri: 'https://sirihelenewahl.no/callback' // Ensure this matches your Spotify Developer Dashboard setting
+// });
 const spotifyApi = new SpotifyWebApi({
-  clientId: 'e766892102b04c559335509e3fa258ef', // Replace with your clientId
-  clientSecret: '7d0265c05e0c4ba590b05260f3d1cea8', // Replace with your clientSecret
-  redirectUri: 'http://127.0.0.1:5002/callback' // Ensure this matches your Spotify Developer Dashboard setting
+  clientId: clientId,// Replace with your clientId
+  clientSecret: clientSecret, // Replace with your clientSecret
+  redirectUri: 'https://sirihelenewahl.no/callback' // Ensure this matches your Spotify Developer Dashboard setting
+});
+
+exports.getSpotifyToken = functions.https.onRequest(async (req, res) => {
+  const authOptions = {
+      method: 'POST',
+      headers: {
+          'Authorization': 'Basic ' + Buffer.from(clientId + ':' + clientSecret).toString('base64'),
+          'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: new URLSearchParams({
+          grant_type: 'authorization_code',
+          code: req.query.code,
+          redirect_uri: req.query.redirect_uri
+      })
+  };
+
+  try {
+      const response = await fetch('https://accounts.spotify.com/api/token', authOptions);
+      const data = await response.json();
+      res.json(data);
+  } catch (error) {
+      res.status(500).send(error.toString());
+  }
+});
+
+exports.getClientId = functions.https.onRequest((req, res) => {
+  cors(req, res, () => {
+      res.json({ clientId: process.env.CLIENT_ID });
+  });
 });
 
 // Login function - Redirect user to Spotify Authorization page
@@ -73,3 +113,4 @@ exports.callback = functions.https.onRequest((req, res) => {
 
 
 //exports.createPlaylist =
+

@@ -3,8 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="images/VORSSIDEikon2.svg">
     <link rel="stylesheet" href="spotifystyles.css">
-    <title>Spotify Search UI</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/c110f170bd.js" crossorigin="anonymous"></script>
+    <title>On Repeat</title>
     <style>
         body {
             box-sizing: border-box;
@@ -17,6 +21,10 @@
             justify-content: center;
             align-items: center;
             margin: 20px 0;
+        }
+        input[type="text"] {
+            font-weight: 500;
+            font-size: 15px;
         }
     
         /* Basic Spotify-like styling */
@@ -75,14 +83,56 @@
             background-color: white;
             color: black;
         }
+
+        .guide-field {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 60%;
+            padding: 15px;
+            margin: 10px;
+            border-radius: 5px;
+            background-color: var(--white);
+            margin: 10px;
+        }
+        article {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-family: var(--encore-body-font-stack);
+        }
+        #spotify-button {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: var(--spotifyPink);
+            color: var(--white);
+            font-weight: 300;
+            cursor: pointer;
+            margin: 10px;
+        }
     </style>
 </head>
 <body>
+    <article>
+        <a href="vorsside" class="home-button" id="home-button">
+            <i class="fa-solid fa-arrow-left-long"></i>Tilbake</a>
     <img src="images/onrepeat.svg"></img>
+    <div id="container"></div>
+    <div class = "guide-field">
+        <p id="selectedSongs"></p>
+        <p>Trykk på <strong>Åpne Spotify</strong>, søk på <strong>On Repeat</strong>, finn sangene du skal legge til, og kom tilbake hit 🩷</p>
+        <button onclick="openSpotify()" id="spotify-button">Åpne Spotify</button>
+        <p>Søk på sangen(e) under, og trykk på den for å legge den til i spillelisten hosten har laget 🔁</p>
+    </div>
 
     <div class="searchField">
         <input type="text" id="searchInput" placeholder="Søk etter sang" />
     </div>
+    
+</article>
 
     <!-- Container to display search results -->
     <div id="spotify-logo-container" style="align-items: center; justify-content: center; display: flex; margin: 10px;">
@@ -95,7 +145,14 @@
 
     <script src="./js/spotify-web-api.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/spotify-web-api-js/1.5.2/spotify-web-api.min.js"></script>
-
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js" defer></script>
+    <script type="module" src="js/firebaseConfig.js" defer></script>
+    <script type="module" src="js/onRepeat.js" defer></script>
+    <script type="module">
+        import { displayOnRepeatPositions } from './js/onRepeat.js';
+        window.displayOnRepeatPositions = displayOnRepeatPositions; // Make the function accessible globally
+      </script>
     <script>
     const spotifyApi = new SpotifyWebApi();
     spotifyApi.setAccessToken(localStorage.getItem('spotifyAccessToken'));
@@ -178,6 +235,7 @@
 
                     // Use the function to add the clicked track to the playlist
                     await spotifyApi.addTracksToPlaylist(playlistId, [trackUri]);
+                    alert('Sangen ble lagt til i spillelisten!');
                         
                 });
             });
@@ -258,12 +316,19 @@
             });
         });
         }
+
+    function openSpotify() {
+        window.location.href = "spotify://";
+    }
         
 
         // Call the function to display playlists and "On Repeat" tracks when the page loads
         window.onload = () => {
-            fetchOnRepeatTracks();
+            const container = document.getElementById('container');
+            const groupId = localStorage.getItem('pendingGroupId'); // Replace with your actual group ID
+            displayOnRepeatPositions(container, groupId);
         };
+
 
     </script>
 </body>
